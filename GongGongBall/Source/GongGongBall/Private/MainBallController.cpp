@@ -3,3 +3,9 @@
 
 #include "MainBallController.h"
 
+void AMainBallController::BeginPlay()
+{
+	Super::BeginPlay();
+	bShowMouseCursor = true;
+	
+}

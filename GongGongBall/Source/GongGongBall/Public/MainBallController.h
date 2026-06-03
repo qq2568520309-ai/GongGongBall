@@ -14,4 +14,9 @@ class GONGGONGBALL_API AMainBallController : public APlayerController
 {
 	GENERATED_BODY()
 	
+protected:
+	
+	virtual void BeginPlay() override;
+	
+	
 };
