@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
 #include "HandBall.generated.h"
 
 UCLASS()
@@ -18,17 +19,23 @@ public:
 	float LineLength = 1000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float InterpSpeed = 30;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	FVector Velocity;
 	
 	
 	
 	
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
 
 public:
 	virtual void Tick(float DeltaTime) override;
+	
+	UFUNCTION(Server,Reliable)
+	void ServerUpdateLocation(FVector DesiredMove, FVector InVelocity);
+	
+	bool IsLocallyControlled();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 };
