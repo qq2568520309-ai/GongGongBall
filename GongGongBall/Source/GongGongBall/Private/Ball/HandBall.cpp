@@ -10,7 +10,7 @@ AHandBall::AHandBall()
 {
 	PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-    SetReplicateMovement(true);
+    AActor::SetReplicateMovement(true);
 }
 
 
@@ -37,8 +37,6 @@ void AHandBall::Tick(float DeltaTime)
             WorldDirection))return;
         
     }
-    
-    
     
     FPlane TablePlane(
         FVector(0,0,OldLocation.Z),

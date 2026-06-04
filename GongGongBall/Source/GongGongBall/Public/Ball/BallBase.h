@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Net/UnrealNetwork.h"
 #include "BallBase.generated.h"
 
 UCLASS()
@@ -22,7 +21,10 @@ public:
 	float MaxVelocity = 1000;
 	
 	void RespondToOverlap(AActor* Actor);
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

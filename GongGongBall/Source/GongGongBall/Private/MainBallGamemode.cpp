@@ -47,6 +47,7 @@ void AMainBallGamemode::SpawnBallPlayer(APlayerController* PlayerController)
 	
 	if (PC != nullptr)
 	{
+		PC->PlayerIndex = CurrentPlayerIndex;
 		for (AActor* Actor : AvailableSpawns)
 		{
 			ASpawnPlaceBase* SpawnPlace = Cast<ASpawnPlaceBase>(Actor);

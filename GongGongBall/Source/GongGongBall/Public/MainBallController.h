@@ -18,7 +18,8 @@ public:
 	TObjectPtr<ABallPlayer> BallPlayer;
 	UPROPERTY(BlueprintReadWrite)
 	TObjectPtr<AHandBall> HandBall;
-	
+	UPROPERTY(BlueprintReadWrite)
+	int PlayerIndex;
 	
 protected:
 	

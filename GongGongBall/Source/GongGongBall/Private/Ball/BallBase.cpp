@@ -2,7 +2,7 @@
 
 
 #include "Ball/BallBase.h"
-
+#include "Bound.h"
 #include "Ball/HandBall.h"
 #include "Net/UnrealNetwork.h"
 
@@ -12,7 +12,7 @@ ABallBase::ABallBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	SetReplicateMovement(true);
+	AActor::SetReplicateMovement(true);
 }
 
 void ABallBase::RespondToOverlap(AActor* Actor)
@@ -80,10 +80,6 @@ void ABallBase::Tick(float DeltaTime)
 	FVector DeltaMove = Velocity * DeltaTime;
 	
 	ServerUpdateLocation(DeltaMove);
-	
-	TArray<AActor*> Overlaps;
-	GetOverlappingActors(Overlaps);
-	
 	//限速
 	if (Velocity.Length() >= MaxVelocity)
 	{
