@@ -21,6 +21,14 @@ public:
 	float InterpSpeed = 30;
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	FVector Velocity;
+	UPROPERTY(Replicated)
+	FVector ServerLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CorrectionInterpSpeed = 12.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxSmoothCorrectionDistance = 120.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TeleportCorrectionDistance = 250.f;
 	
 	
 	
@@ -36,6 +44,9 @@ public:
 	void ServerUpdateLocation(FVector DesiredMove, FVector InVelocity);
 	
 	bool IsLocallyControlled();
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	void SmoothToServerState(float DeltaTime);
 	
 };

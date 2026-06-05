@@ -10,7 +10,7 @@ AHandBall::AHandBall()
 {
 	PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-    AActor::SetReplicateMovement(true);
+    AActor::SetReplicateMovement(false);
 }
 
 
@@ -18,12 +18,25 @@ AHandBall::AHandBall()
 void AHandBall::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    ServerLocation = GetActorLocation();
 }
 
 void AHandBall::Tick(float DeltaTime)
 {
-    if (!IsLocallyControlled())return;
+    const bool bLocalControl = IsLocallyControlled();
+
+    if (!bLocalControl)
+    {
+        if (HasAuthority())
+        {
+            ServerLocation = GetActorLocation();
+        }
+
+        SmoothToServerState(DeltaTime);
+        return;
+    }
+
     if (DeltaTime <= KINDA_SMALL_NUMBER)return;
 
     FVector OldLocation = GetActorLocation();
@@ -60,18 +73,37 @@ void AHandBall::Tick(float DeltaTime)
     
     Velocity = DesiredMove / DeltaTime;
     Velocity.Z = 0.f;
+
+    // 客户端先本地预测移动，避免只能等待服务端复制导致的抖动。
+    FHitResult LocalHit;
+    AddActorWorldOffset(DesiredMove, true, &LocalHit);
+    if (LocalHit.bBlockingHit)
+    {
+        FVector LocalSlide = FVector::VectorPlaneProject(
+            DesiredMove,
+            LocalHit.ImpactNormal
+        );
+        AddActorWorldOffset(LocalSlide, true);
+    }
     
     // 由服务端权威移动，并使用客户端提交的瞬时速度驱动碰撞响应。
-    ServerUpdateLocation(DesiredMove, Velocity);
-    
-    
-    
+    if (!HasAuthority())
+    {
+        //发送RPC
+        ServerUpdateLocation(DesiredMove, Velocity);
+    }
+    else
+    {
+        //服务器直接执行具体内容
+        ServerUpdateLocation_Implementation(DesiredMove, Velocity);
+    }
+
+    SmoothToServerState(DeltaTime);
 }
 
 void AHandBall::ServerUpdateLocation_Implementation(FVector DesiredMove, FVector InVelocity)
 {
-    UE_LOG(LogTemp, Warning, TEXT("RPC_UpdateLocationCalled!"));
-
+    //服务器更新该手壶的速度
     Velocity = InVelocity;
     Velocity.Z = 0.f;
     
@@ -91,7 +123,8 @@ void AHandBall::ServerUpdateLocation_Implementation(FVector DesiredMove, FVector
         );
         AddActorWorldOffset(Slide, true);
     }
-    
+
+    ServerLocation = GetActorLocation();
 }
 
 void AHandBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -99,6 +132,7 @@ void AHandBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AHandBall, Velocity);
+    DOREPLIFETIME(AHandBall, ServerLocation);
 }
 
 bool AHandBall::IsLocallyControlled()
@@ -110,3 +144,38 @@ bool AHandBall::IsLocallyControlled()
     return false;
 }
 
+void AHandBall::SmoothToServerState(float DeltaTime)
+{
+    if (DeltaTime <= KINDA_SMALL_NUMBER)
+    {
+        return;
+    }
+
+    const FVector CurrentLocation = GetActorLocation();
+    const FVector DeltaToServer = ServerLocation - CurrentLocation;
+    const float ErrorDistance = DeltaToServer.Size();
+    if (ErrorDistance <= KINDA_SMALL_NUMBER)
+    {
+        return;
+    }
+
+    if (ErrorDistance >= TeleportCorrectionDistance)
+    {
+        SetActorLocation(ServerLocation);
+        return;
+    }
+
+    FVector TargetLocation = ServerLocation;
+    if (IsLocallyControlled() && ErrorDistance > MaxSmoothCorrectionDistance)
+    {
+        TargetLocation = CurrentLocation + DeltaToServer.GetClampedToMaxSize(MaxSmoothCorrectionDistance);
+    }
+
+    const FVector SmoothedLocation = FMath::VInterpTo(
+        CurrentLocation,
+        TargetLocation,
+        DeltaTime,
+        CorrectionInterpSpeed
+    );
+    SetActorLocation(SmoothedLocation);
+}

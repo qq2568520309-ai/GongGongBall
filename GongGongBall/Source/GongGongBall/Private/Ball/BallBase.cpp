@@ -2,9 +2,7 @@
 
 
 #include "Ball/BallBase.h"
-#include "Bound.h"
 #include "Ball/HandBall.h"
-#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -22,7 +20,7 @@ void ABallBase::RespondToOverlap(AActor* Actor)
 	{
 		return;
 	}
-
+	
 	UE_LOG(LogTemp,Warning,TEXT("Velocity = %s"),*Ball->Velocity.ToString());
 	FVector ToBall =
 		GetActorLocation() - Ball->GetActorLocation();
@@ -91,12 +89,6 @@ void ABallBase::Tick(float DeltaTime)
 	
 }
 
-void ABallBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ABallBase, Velocity);
-}
 
 void ABallBase::ServerUpdateLocation_Implementation(FVector DeltaMove)
 {
@@ -111,7 +103,7 @@ void ABallBase::ServerUpdateLocation_Implementation(FVector DeltaMove)
 			- 2.f * FVector::DotProduct(Velocity, N) * N;
 
 		Velocity *= 0.95f;
-
+	
 		// 防止贴墙抖动
 		AddActorWorldOffset(N * 1.0f, false);
 	}

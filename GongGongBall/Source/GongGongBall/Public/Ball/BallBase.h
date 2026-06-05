@@ -15,14 +15,14 @@ public:
 	ABallBase();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector InitialVelocity = FVector(100.0f, 0.0f, 0.0f);
-	UPROPERTY(Replicated, BlueprintReadOnly)
+	//UPROPERTY(Replicated, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 	FVector Velocity;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	float MaxVelocity = 1000;
 	
 	void RespondToOverlap(AActor* Actor);
-	
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	
 	
 protected:
@@ -35,4 +35,5 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerUpdateLocation(FVector DeltaMove);
+	
 };
